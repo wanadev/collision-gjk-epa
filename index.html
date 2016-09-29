@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html" charset="utf-8"/>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+
+    <!-- Latest compiled and minified JavaScript -->
+    <title>Collision GJK EPA</title>
+    <script src="http://code.jquery.com/jquery-latest.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script src="http://www.babylonjs.com/babylon.js"></script>
+    <script src="./build/collision-gjk-epa.js"></script>
+    <style>
+        html, body {
+            overflow: hidden;
+            width   : 100%;
+            height  : 100%;
+            margin  : 0;
+            padding : 0;
+        }
+
+        #canvas2d {
+            width   : 100%;
+            height  : 100%;
+        }
+
+        #canvas3d {
+            width   : 100%;
+            height  : 100%;
+            touch-action: none;
+        }
+
+        .hidden {
+          display: none;
+        }
+
+        .buttons {
+          position: fixed;
+          bottom: 10px;
+          right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <a href="https://github.com/clementlevasseur"><img style="position: absolute; top: 0; left: 0; border: 0;" src="https://camo.githubusercontent.com/82b228a3648bf44fc1163ef44c62fcc60081495e/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f6c6566745f7265645f6161303030302e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_left_red_aa0000.png"></a>
+    <div class="btn-group buttons" data-toggle="buttons">
+      <button id="2D" type="button" class="btn btn-secondary">2D</button>
+      <button id="3D" type="button" class="btn btn-secondary">3D</button>
+    </div>
+    <canvas id="canvas2d"></canvas>
+    <canvas id="canvas3d"></canvas>
+    <script>
+      $('#2D').on("click", function () {
+        $('#canvas2d').removeClass("hidden");
+        $('#canvas3d').addClass("hidden");
+      });
+      $('#3D').on("click", function () {
+        $('#canvas2d').addClass("hidden");
+        $('#canvas3d').removeClass("hidden");
+      });
+
+    </script>
+    <script src="./demo/demo2d.js"></script>
+    <script src="./demo/demo3d.js"></script>
+</body>
+</html>

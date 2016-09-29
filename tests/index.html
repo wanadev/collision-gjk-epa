@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+
+<html>
+
+    <head>
+        <meta charset="UTF-8" />
+        <title>Collision gjk epa Tests</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link type="text/css" rel="stylesheet" href="mocha.css" />
+    </head>
+
+    <body>
+        <div id="mocha"></div>
+        <div id="collision-gjk-epa" style="display: none"></div>
+
+        <script src="mocha.js"></script>
+        <script>mocha.setup("bdd")</script>
+        <script src="collision-gjk-epa.js"></script>
+        <script>
+            mocha.checkLeaks();
+            mocha.run();
+        </script>
+    </body>
+
+</html>
