@@ -83,9 +83,9 @@ var callbacks3D = {
     }
 }
 
-window.addEventListener('mousemove', callbacks3D.onMouseMove);
-window.addEventListener('mousedown', callbacks3D.onMouseDown);
-window.addEventListener('mouseup', callbacks3D.onMouseUp);
+canvas3D.addEventListener('pointermove', callbacks3D.onMouseMove);
+canvas3D.addEventListener('pointerdown', callbacks3D.onMouseDown);
+canvas3D.addEventListener('pointerup', callbacks3D.onMouseUp);
 ///ui
 
 var getGroundPosition = function () {
