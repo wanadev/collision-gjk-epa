@@ -125,9 +125,9 @@ var callbacks2D = {
     }
 }
 
-window.addEventListener('mousemove', callbacks2D.onMouseMove);
-window.addEventListener('mousedown', callbacks2D.onMouseDown);
-window.addEventListener('mouseup', callbacks2D.onMouseUp);
+canvas2D.addEventListener('pointermove', callbacks2D.onMouseMove);
+canvas2D.addEventListener('pointerdown', callbacks2D.onMouseDown);
+canvas2D.addEventListener('pointerup', callbacks2D.onMouseUp);
 ///ui
 
 var generateRandomPolygon = function(type) {
