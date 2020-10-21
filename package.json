@@ -1,6 +1,6 @@
 {
     "name": "collision-gjk-epa",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "description": "Fast collision detection and response for babylonjs",
     "scripts": {
         "test": "grunt test"
