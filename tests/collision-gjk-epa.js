@@ -47,7 +47,60 @@ describe('wnp/lib/collision-gjk-epa', function() {
         expect(collisionner.intersect(points1, points2)).to.be.eql(false);
     });
 
+    it('checks if two rectangles side by side do not intersect in 2d', function() {
+        var rectangle1 = [
+            new BABYLON.Vector2(-1, 0),
+            new BABYLON.Vector2(-1, 1),
+            new BABYLON.Vector2(1, 1),
+            new BABYLON.Vector2(1, 0),
+        ];
+        var rectangle2 = [
+            new BABYLON.Vector2(-10, 1),
+            new BABYLON.Vector2(-10, 5),
+            new BABYLON.Vector2(15, 5),
+            new BABYLON.Vector2(15, 1),
+        ];
+        expect(collisionner.isIntersecting(rectangle1, rectangle2)).to.be(true);
+        expect(collisionner.intersect(rectangle1, rectangle2)).to.be.eql({ x: 0, y: 0 });
+    });
 
+    it('checks if two rectangles side by side do not intersect in 2d, other case', function() {
+        var rectangle1 = [
+            new BABYLON.Vector2(10, 0),
+            new BABYLON.Vector2(10, -3),
+            new BABYLON.Vector2(-10, -3),
+            new BABYLON.Vector2(-10, 0),
+        ];
+        
+        var rectangle2 = [
+            new BABYLON.Vector2(1, 2),
+            new BABYLON.Vector2(1, 0),
+            new BABYLON.Vector2(-5, 0),
+            new BABYLON.Vector2(-5, 2),
+        ];
+        
+        expect(collisionner.isIntersecting(rectangle1, rectangle2)).to.be(true);
+        expect(collisionner.intersect(rectangle1, rectangle2)).to.be.eql({ x: 0, y: 0 });
+    });
+
+    it('checks if two rectangles side by side do not intersect in 2d, with decimals', function() {
+        var rectangle1 = [
+            new BABYLON.Vector2(-190.55065, -407.41001),
+            new BABYLON.Vector2(-280.55065, -407.41001),
+            new BABYLON.Vector2(-280.55065, -447.21),
+            new BABYLON.Vector2(-190.55065, -447.21),
+        ];
+        
+        var rectangle2 = [
+            new BABYLON.Vector2(462.21999999999997, -447.21),
+            new BABYLON.Vector2(462.21999999999997, -477.21),
+            new BABYLON.Vector2(-462.21999999999997, -477.21),
+            new BABYLON.Vector2(-462.21999999999997, -447.21),
+        ];
+        
+        expect(collisionner.isIntersecting(rectangle1, rectangle2)).to.be(true);
+        expect(collisionner.intersect(rectangle1, rectangle2)).to.be.eql({ x: 0, y: 0 });
+    });
 
     it('checks if two cloud of point intersect in 3d', function() {
 
@@ -80,5 +133,18 @@ describe('wnp/lib/collision-gjk-epa', function() {
         }
         expect(collisionner.isIntersecting(points3d1, points3d2)).to.be(false);
         expect(collisionner.intersect(points3d1, points3d2)).to.be.eql(false);
+    });
+
+    describe('_getNormal', function() {
+        it('computes zero-normal of two colinear 2D vector, with decimals', function() {
+            var x = new BABYLON.Vector2(271.66935, 0);
+            var nx = new BABYLON.Vector2(-1014.4399999999999, 0);
+            expect(collisionner._getNormal(x, nx, x)).to.be.eql({ x: 0, y: 0 });
+            expect(collisionner._getNormal(x, nx, nx)).to.be.eql({ x: 0, y: 0 });
+            expect(collisionner._getNormal(x, x, nx)).to.be.eql({ x: 0, y: 0 });
+            expect(collisionner._getNormal(nx, x, nx)).to.be.eql({ x: 0, y: 0 });
+            expect(collisionner._getNormal(nx, x, x)).to.be.eql({ x: 0, y: 0 });
+            expect(collisionner._getNormal(nx, nx, x)).to.be.eql({ x: 0, y: 0 });
+        });
     });
 });

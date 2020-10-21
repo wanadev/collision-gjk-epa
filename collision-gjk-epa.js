@@ -38,8 +38,11 @@ var CollisionGjkEpa = {
         var bc = Dot(b, c); // perform bDot(c)
 
         // perform b * a.Dot(c) - a * b.Dot(c)
-        var r = b.scale(ac).subtract(a.scale(bc)).normalize();
-        return r;
+        var r = b.scale(ac).subtract(a.scale(bc));
+        if (r.lengthSquared() < this.EPSILON * this.EPSILON) {
+            return r.scale(0);
+        }
+        return r.normalize();
     },
 
     /**
@@ -109,8 +112,16 @@ var CollisionGjkEpa = {
             var n = this._getNormal(edge, originTov1, edge);
 
             if (n.lengthSquared() === 0) {
+                // Origin is on the edge
                 n.y = -edge.x;
                 n.x = edge.y;
+                // normal should go outside the simplex
+                var center = this._getBarycenter(simplex)
+                var centerTov1 = v1.subtract(center);
+                if (n.constructor.Dot(n, centerTov1) < 0) {
+                    n.y = -n.y;
+                    n.x = -n.x;
+                }
             }
 
             //n = n.scale(1 / n.length()); //normalize
