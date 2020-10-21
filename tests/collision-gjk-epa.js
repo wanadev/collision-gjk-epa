@@ -64,23 +64,23 @@ describe('wnp/lib/collision-gjk-epa', function() {
         expect(collisionner.intersect(rectangle1, rectangle2)).to.be.eql({ x: 0, y: 0 });
     });
 
-    it('checks if two rectangles side by side do not intersect in 2d', function() {
-        var colliderBox = [
+    it('checks if two rectangles side by side do not intersect in 2d, other case', function() {
+        var rectangle1 = [
             new BABYLON.Vector2(10, 0),
             new BABYLON.Vector2(10, -3),
             new BABYLON.Vector2(-10, -3),
             new BABYLON.Vector2(-10, 0),
         ];
         
-        var collidingBox = [
+        var rectangle2 = [
             new BABYLON.Vector2(1, 2),
-            new BABYLON.Vector2(-5, 2),
-            new BABYLON.Vector2(-5, 0),
             new BABYLON.Vector2(1, 0),
+            new BABYLON.Vector2(-5, 0),
+            new BABYLON.Vector2(-5, 2),
         ];
         
-        expect(collisionner.isIntersecting(colliderBox, collidingBox)).to.be(true);
-        expect(collisionner.intersect(colliderBox, collidingBox)).to.be.eql({ x: 0, y: 0 });
+        expect(collisionner.isIntersecting(rectangle1, rectangle2)).to.be(true);
+        expect(collisionner.intersect(rectangle1, rectangle2)).to.be.eql({ x: 0, y: 0 });
     });
 
     it('checks if two cloud of point intersect in 3d', function() {
