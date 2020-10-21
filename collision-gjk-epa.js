@@ -38,8 +38,11 @@ var CollisionGjkEpa = {
         var bc = Dot(b, c); // perform bDot(c)
 
         // perform b * a.Dot(c) - a * b.Dot(c)
-        var r = b.scale(ac).subtract(a.scale(bc)).normalize();
-        return r;
+        var r = b.scale(ac).subtract(a.scale(bc));
+        if (r.lengthSquared() < this.EPSILON * this.EPSILON) {
+            return r.scale(0);
+        }
+        return r.normalize();
     },
 
     /**
