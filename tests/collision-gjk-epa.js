@@ -171,6 +171,7 @@ describe('wnp/lib/collision-gjk-epa', function() {
                     
                     expect(collisionner.isIntersecting(points1, movedPoints2)).to.be(false);
                     expect(collisionner.intersect(points1, movedPoints2)).to.be.eql(false);
+                    expect(collisionner.intersectMultiple(points1, movedPoints2)).to.be.eql(false);
                 }
             }
         });
@@ -199,6 +200,7 @@ describe('wnp/lib/collision-gjk-epa', function() {
         
                     expect(collisionner.isIntersecting(points3d1, movedPoints2)).to.be(false);
                     expect(collisionner.intersect(points3d1, movedPoints2)).to.be.eql(false);
+                    expect(collisionner.intersectMultiple(points3d1, movedPoints2)).to.be.eql(false);
                 }
             }
     
