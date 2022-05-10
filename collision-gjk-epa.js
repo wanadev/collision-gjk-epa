@@ -531,7 +531,7 @@ var CollisionGjkEpa = {
     findResponseWithEdge: function(colliderPoints, collidedPoints, simplex, except) {
         if (except === undefined) except = [];
 
-        var edge = this._getNearestEdge(simplex);
+        var edge = this._getNearestEdge(simplex, except);
         if (edge.index === undefined) return false;
 
         var sup = this.support(colliderPoints, collidedPoints, edge.normal); //get support point in direction of edge's normal
@@ -566,7 +566,7 @@ var CollisionGjkEpa = {
             return false;
         }
 
-        var nearest = this._getNearestTriangle(polytope);
+        var nearest = this._getNearestTriangle(polytope, except);
         if (nearest.index === undefined) return false;
 
         var triangle = polytope[nearest.index];
