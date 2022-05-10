@@ -698,7 +698,7 @@ var CollisionGjkEpa = {
      */
     _addResponse: function(responses, response) {
         for (var i = 0; i < responses.length; i++) {
-            if (responses[i].subtract(response).lengthSquared < this.EPSILON) {
+            if (responses[i].subtract(response).lengthSquared() < this.EPSILON) {
                 return;
             }
         }
