@@ -654,14 +654,14 @@ var CollisionGjkEpa = {
      * @return {BABYLON.Vector2|BABYLON.Vector3} The penetration vector.
      */
     getResponse: function(colliderPoints, collidedPoints, simplex) {
-        var responses = this.getResponses(colliderPoints, collidedPoints, simplex);
+        var responses = this.getResponses(colliderPoints, collidedPoints, simplex, { maxResponses: 1 });
         if (!responses) return responses;
         if (responses[0]) return responses[0];
         return false;
     },
 
     getResponses: function(colliderPoints, collidedPoints, simplex, options) {
-        if(options === undefined) options = {};
+        if (options === undefined) options = {};
         options = Object.assign({ maxResponses: -1 }, options);
 
         var it = 0,
@@ -733,6 +733,26 @@ var CollisionGjkEpa = {
         //this.cube = this.cube || [];
         if (simplex) {
             return this.getResponse(colliderPoints, collidedPoints, simplex);
+        }
+
+        return false;
+    },
+
+    /**
+     * Checks if the collider and the collided object are intersecting
+     * and give the multiple responses to be out of the object.
+     *
+     * @method intersectMultiple
+     * @param {BABYLON.Vector2|BABYLON.Vector3[]} colliderPoints The convexe collider object.
+     * @param {BABYLON.Vector2|BABYLON.Vector3[]} collidedPoints The convexe collided object.
+     * @param {Object} [options]
+     * @return {BABYLON.Vector2|BABYLON.Vector3[]} The penetration vectors.
+     */
+    intersectMultiple: function(colliderPoints, collidedPoints, options) {
+        var simplex = this.check(colliderPoints, collidedPoints);
+
+        if (simplex) {
+            return this.getResponses(colliderPoints, collidedPoints, simplex, options);
         }
 
         return false;
