@@ -91,14 +91,19 @@ var CollisionGjkEpa = {
      * @method _getNearestEdge
      * @private
      * @param {BABYLON.Vector2|BABYLON.Vector3[]} simplex The simplex.
+     * @param {number[]} [except] Exceptions: edge indices to ignore
      * @return {Object} Informations about the nearest edge (distance, index and normal).
      */
-    _getNearestEdge: function(simplex) {
+    _getNearestEdge: function(simplex, except) {
+        if (except === undefined) except = [];
+
         var distance = Infinity,
             index, normal;
 
         for (var i = 0; i < simplex.length; i++) {
             var j = (i + 1) % simplex.length;
+            if (except.includes(j)) continue; // ignore this edge
+
             var v1 = simplex[i];
             var v2 = simplex[j];
 
@@ -148,13 +153,17 @@ var CollisionGjkEpa = {
      * @method _getNearestTriangle
      * @private
      * @param {BABYLON.Triangle[]} polytope The polytope.
+     * @param {number[]} [except] Exceptions: triangle indices to ignore
      * @return {Object} Informations about the nearest edge (distance and index).
      */
-    _getNearestTriangle: function(polytope) {
+    _getNearestTriangle: function(polytope, except) {
+        if (except === undefined) except = [];
+
         var distance = Infinity,
             index;
 
         for (var i = 0; i < polytope.length; i++) {
+            if (except.includes(i)) continue;
 
             var triangle = polytope[i];
             var dist = Math.abs(triangle.n.constructor.Dot(triangle.n, triangle.a));
@@ -425,7 +434,7 @@ var CollisionGjkEpa = {
     /**
      * Checks if the simplex contains the origin.
      *
-     * @method findResponseWithEdge
+     * @method containsOrigin
      * @param {BABYLON.Vector2|BABYLON.Vector3[]} simplexThe simplex or false if no intersection.
      * @param {BABYLON.Vector2|BABYLON.Vector3} dir The direction to test.
      * @return {Boolean} Contains or not.
@@ -449,7 +458,7 @@ var CollisionGjkEpa = {
      * create a simplex. The points of the collider and the collided object
      * must be convexe.
      *
-     * @method findResponseWithEdge
+     * @method check
      * @param {BABYLON.Vector2|BABYLON.Vector3[]} colliderPoints The convexe collider object.
      * @param {BABYLON.Vector2|BABYLON.Vector3[]} collidedPoints The convexe collided object.
      * @return {BABYLON.Vector2|BABYLON.Vector3[]} The simplex or false if no intersection.
@@ -516,18 +525,27 @@ var CollisionGjkEpa = {
      * @param {BABYLON.Vector2[]} colliderPoints The convexe collider object.
      * @param {BABYLON.Vector2[]} collidedPoints The convexe collided object.
      * @param {BABYLON.Vector2[]} simplex The simplex.
+     * @param {number[]} [except] Exceptions: edge indices to ignore
      * @return {BABYLON.Vector2|BABYLON.Vector3} The penetration vector.
      */
-    findResponseWithEdge: function(colliderPoints, collidedPoints, simplex) {
-        var edge = this._getNearestEdge(simplex);
+    findResponseWithEdge: function(colliderPoints, collidedPoints, simplex, except) {
+        if (except === undefined) except = [];
+
+        var edge = this._getNearestEdge(simplex, except);
+        if (edge.index === undefined) return false;
+
         var sup = this.support(colliderPoints, collidedPoints, edge.normal); //get support point in direction of edge's normal
         var d = Math.abs(sup.constructor.Dot(sup, edge.normal));
 
         if (d - edge.distance <= this.EPSILON) {
+            except.push(edge.index);
             return edge.normal.scale(edge.distance);
-        } else {
-            simplex.splice(edge.index, 0, sup);
         }
+        // add new support point in simplex
+        simplex.splice(edge.index, 0, sup);
+        // update indices of edges exceptions
+        this._updateExceptionsByInsert(except, edge.index, simplex);
+
         return false;
     },
 
@@ -538,15 +556,19 @@ var CollisionGjkEpa = {
      * @param {BABYLON.Vector3[]} colliderPoints The convexe collider object.
      * @param {BABYLON.Vector3[]} collidedPoints The convexe collided object.
      * @param {Triangle[]} polytope The polytope done with the simplex.
+     * @param {number[]} [except] Exceptions: triangle indices to ignore
      * @return {BABYLON.Vector2|BABYLON.Vector3} The penetration vector.
      */
-    findResponseWithTriangle: function(colliderPoints, collidedPoints, polytope) {
+    findResponseWithTriangle: function(colliderPoints, collidedPoints, polytope, except) {
+        if (except === undefined) except = [];
 
         if (polytope.length === 0) {
             return false;
         }
 
-        var nearest = this._getNearestTriangle(polytope);
+        var nearest = this._getNearestTriangle(polytope, except);
+        if (nearest.index === undefined) return false;
+
         var triangle = polytope[nearest.index];
 
         var sup = this.support(colliderPoints, collidedPoints, triangle.n);
@@ -554,39 +576,72 @@ var CollisionGjkEpa = {
         var d = Math.abs(sup.constructor.Dot(sup, triangle.n));
 
         if ((d - nearest.distance <= this.EPSILON)) {
+            except.push(nearest.index);
             return triangle.n.scale(nearest.distance);
-        } else {
-            var edges = [];
-            for (var i = polytope.length - 1; i >= 0; i--) {
-                triangle = polytope[i];
-                // can this face be 'seen' by entry_cur_support?
-                if (triangle.n.constructor.Dot(triangle.n, sup.subtract(polytope[i].a)) > 0) {
-                    this._addEdge(edges, {
-                        a: triangle.a,
-                        b: triangle.b
-                    });
-                    this._addEdge(edges, {
-                        a: triangle.b,
-                        b: triangle.c
-                    });
-                    this._addEdge(edges, {
-                        a: triangle.c,
-                        b: triangle.a
-                    });
-                    polytope.splice(i, 1);
-                }
-            }
+        }
 
-            // create new triangles from the edges in the edge list
-            for (var i = 0; i < edges.length; i++) {
-                triangle = new Triangle(sup, edges[i].a, edges[i].b);
-                if (triangle.n.length() !== 0) {
-                    polytope.push(triangle);
-                }
+        var edges = [];
+        for (var i = polytope.length - 1; i >= 0; i--) {
+            triangle = polytope[i];
+            // can this face be 'seen' by entry_cur_support?
+            if (triangle.n.constructor.Dot(triangle.n, sup.subtract(polytope[i].a)) > 0) {
+                this._addEdge(edges, {
+                    a: triangle.a,
+                    b: triangle.b
+                });
+                this._addEdge(edges, {
+                    a: triangle.b,
+                    b: triangle.c
+                });
+                this._addEdge(edges, {
+                    a: triangle.c,
+                    b: triangle.a
+                });
+                // remove a triangle
+                polytope.splice(i, 1);
+                // update exceptions with removed triangle index
+                this._removeException(except, i);
+            }
+        }
+
+        // create new triangles from the edges in the edge list
+        for (var i = 0; i < edges.length; i++) {
+            triangle = new Triangle(sup, edges[i].a, edges[i].b);
+            if (triangle.n.length() !== 0) {
+                polytope.push(triangle);
             }
         }
 
         return false;
+    },
+
+    /**
+     * Update exception from insertion of new edge
+     * @param {number[]} except 
+     * @param {number} edgeIndex inserted edge index
+     * @param {BABYLON.Vector2[]} simplex 
+     */
+    _updateExceptionsByInsert: function(except, edgeIndex, simplex) {
+        for (var i = 0; i < except.length; i++) {
+            if (except[i] >= edgeIndex) {
+                except[i] = (except[i] + 1) % simplex.length;
+            }
+        }
+    },
+
+    /**
+     * Update exceptions when an index has been removed
+     * @param {number[]} except 
+     * @param {number} indexToRemove 
+     */
+    _removeException: function(except, indexToRemove) {
+        for (var i = except.length - 1; i >= 0; i--) {
+            if(except[i] === indexToRemove) {
+                except.splice(i, 1);
+            } else if (except[i] > indexToRemove) {
+                except[i]--;
+            }
+        }
     },
 
     /**
@@ -599,6 +654,16 @@ var CollisionGjkEpa = {
      * @return {BABYLON.Vector2|BABYLON.Vector3} The penetration vector.
      */
     getResponse: function(colliderPoints, collidedPoints, simplex) {
+        var responses = this.getResponses(colliderPoints, collidedPoints, simplex, { maxResponses: 1 });
+        if (!responses) return responses;
+        if (responses[0]) return responses[0];
+        return false;
+    },
+
+    getResponses: function(colliderPoints, collidedPoints, simplex, options) {
+        if (options === undefined) options = {};
+        options = Object.assign({ maxResponses: -1 }, options);
+
         var it = 0,
             response;
         var polytope = simplex[0].z !== undefined ? [new Triangle(simplex[0], simplex[1], simplex[2]),
@@ -608,19 +673,37 @@ var CollisionGjkEpa = {
         ] : null;
 
         var max = collidedPoints.length * colliderPoints.length;
-        while (it < max) {
+        var except = [];
+        var responses = [];
+        while (it < max && responses.length !== options.maxResponses) {
             if (simplex[0].z === undefined) {
-                response = this.findResponseWithEdge(colliderPoints, collidedPoints, simplex);
+                response = this.findResponseWithEdge(colliderPoints, collidedPoints, simplex, except);
             } else {
-                response = this.findResponseWithTriangle(colliderPoints, collidedPoints, polytope);
+                response = this.findResponseWithTriangle(colliderPoints, collidedPoints, polytope, except);
             }
             if (response) {
                 var norm = response.clone().normalize().scaleInPlace(this.EPSILON);
-                return response.addToRef(norm, response);
+                var reponseWithOffset = response.addToRef(norm, response);
+                this._addResponse(responses, reponseWithOffset);
             }
             it++;
         }
-        return false;
+        return responses;
+    },
+
+    /**
+     * Add response to responses if not already present
+     * @param {BABYLON.Vector2|BABYLON.Vector3[]} responses
+     * @param {BABYLON.Vector2|BABYLON.Vector3} response
+     */
+    _addResponse: function(responses, response) {
+        for (var i = 0; i < responses.length; i++) {
+            if (responses[i].subtract(response).lengthSquared() < this.EPSILON) {
+                return;
+            }
+        }
+
+        responses.push(response);
     },
 
     /**
@@ -650,6 +733,26 @@ var CollisionGjkEpa = {
         //this.cube = this.cube || [];
         if (simplex) {
             return this.getResponse(colliderPoints, collidedPoints, simplex);
+        }
+
+        return false;
+    },
+
+    /**
+     * Checks if the collider and the collided object are intersecting
+     * and give the multiple responses to be out of the object.
+     *
+     * @method intersectMultiple
+     * @param {BABYLON.Vector2|BABYLON.Vector3[]} colliderPoints The convexe collider object.
+     * @param {BABYLON.Vector2|BABYLON.Vector3[]} collidedPoints The convexe collided object.
+     * @param {Object} [options]
+     * @return {BABYLON.Vector2|BABYLON.Vector3[]} The penetration vectors.
+     */
+    intersectMultiple: function(colliderPoints, collidedPoints, options) {
+        var simplex = this.check(colliderPoints, collidedPoints);
+
+        if (simplex) {
+            return this.getResponses(colliderPoints, collidedPoints, simplex, options);
         }
 
         return false;
